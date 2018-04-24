@@ -137,17 +137,16 @@ services:
 
   tsdb-gw:
     hostname: tsdb-gw
-    image: raintank/tsdb-gw:0.8.0-144-g94584bc
+    image: raintank/tsdb-gw:0.8.0-23-g0c201c8
     ports:
      - "9000:80"
     volumes:
       - ../../scripts/config/storage-schemas.conf:/etc/metrictank/storage-schemas.conf
-      - ./gw:/etc/gw/
+      - ./raintank:/etc/raintank
       - ./storage-schemas.conf:/etc/storage-schemas.conf
     environment:
      WAIT_HOSTS: kafka:9092
      WAIT_TIMEOUT: 60
-     GW_METRICS_BUFFER_MAX_MS: 50
     links:
      - metrictank
      - graphite

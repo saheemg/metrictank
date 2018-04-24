@@ -113,7 +113,7 @@
       "targets": [
         {
           "refId": "A",
-          "target": "aliasByNode(perSecond(tsdb-gw.stats.$env.$host.output.kafka.published.*.counter32), 6, 7)"
+          "target": "aliasByNode(perSecond(tsdb-gw.stats.$env.$host.metrics.published.counter32), 6, 7)"
         }
       ],
       "thresholds": [],
