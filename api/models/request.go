@@ -27,9 +27,8 @@ type Req struct {
 	// we need to make this differentiation to tie back to the original request (and we can't just fill in the concrete consolidation in the request,
 	// because one request may result in multiple series with different consolidators)
 	ConsReq  consolidation.Consolidator `json:"consolidator_req"`
-	Node     cluster.Node               `json:"-"`
-	SchemaId uint16                     `json:"schemaId"`
-	AggId    uint16                     `json:"aggId"`
+	SchemaId uint16                     `json:"schemaId"` // for request alignment with other requests
+	Node     cluster.Node               `json:"-"`        // node to execute on
 
 	// these fields need some more coordination and are typically set later
 	Archive      int    `json:"archive"`      // 0 means original data, 1 means first agg level, 2 means 2nd, etc.
@@ -39,7 +38,7 @@ type Req struct {
 	AggNum       uint32 `json:"aggNum"`       // how many points to consolidate together at runtime, after fetching from the archive
 }
 
-func NewReq(key schema.MKey, target, patt string, from, to, maxPoints, rawInterval uint32, cons, consReq consolidation.Consolidator, node cluster.Node, schemaId, aggId uint16) Req {
+func NewReq(key schema.MKey, target, patt string, from, to, maxPoints, rawInterval uint32, cons, consReq consolidation.Consolidator, node cluster.Node, schemaId uint16) Req {
 	return Req{
 		key,
 		target,
@@ -50,9 +49,8 @@ func NewReq(key schema.MKey, target, patt string, from, to, maxPoints, rawInterv
 		rawInterval,
 		cons,
 		consReq,
-		node,
 		schemaId,
-		aggId,
+		node,
 		-1, // this is supposed to be updated still!
 		0,  // this is supposed to be updated still
 		0,  // this is supposed to be updated still
@@ -66,8 +64,8 @@ func (r Req) String() string {
 }
 
 func (r Req) DebugString() string {
-	return fmt.Sprintf("Req key=%q target=%q pattern=%q %d - %d (%s - %s) (span %d) maxPoints=%d rawInt=%d cons=%s consReq=%d schemaId=%d aggId=%d archive=%d archInt=%d ttl=%d outInt=%d aggNum=%d",
-		r.MKey, r.Target, r.Pattern, r.From, r.To, util.TS(r.From), util.TS(r.To), r.To-r.From-1, r.MaxPoints, r.RawInterval, r.Consolidator, r.ConsReq, r.SchemaId, r.AggId, r.Archive, r.ArchInterval, r.TTL, r.OutInterval, r.AggNum)
+	return fmt.Sprintf("Req key=%q target=%q pattern=%q %d - %d (%s - %s) (span %d) maxPoints=%d rawInt=%d cons=%s consReq=%d schemaId=%d archive=%d archInt=%d ttl=%d outInt=%d aggNum=%d",
+		r.MKey, r.Target, r.Pattern, r.From, r.To, util.TS(r.From), util.TS(r.To), r.To-r.From-1, r.MaxPoints, r.RawInterval, r.Consolidator, r.ConsReq, r.SchemaId, r.Archive, r.ArchInterval, r.TTL, r.OutInterval, r.AggNum)
 }
 
 // Trace puts all request properties as tags in a span
@@ -84,7 +82,6 @@ func (r Req) Trace(span opentracing.Span) {
 	span.SetTag("cons", r.Consolidator)
 	span.SetTag("consReq", r.ConsReq)
 	span.SetTag("schemaId", r.SchemaId)
-	span.SetTag("aggId", r.AggId)
 	span.SetTag("archive", r.Archive)
 	span.SetTag("archInterval", r.ArchInterval)
 	span.SetTag("TTL", r.TTL)
@@ -109,7 +106,6 @@ func (r Req) TraceLog(span opentracing.Span) {
 		log.String("cons", r.Consolidator.String()),
 		log.String("consReq", r.ConsReq.String()),
 		log.Int("schemaId", int(r.SchemaId)),
-		log.Int("aggId", int(r.AggId)),
 		log.Int("archive", r.Archive),
 		log.Int("archInterval", int(r.ArchInterval)),
 		log.Int("TTL", int(r.TTL)),
@@ -158,9 +154,6 @@ func (a Req) Equals(b Req) bool {
 		return false
 	}
 	if a.SchemaId != b.SchemaId {
-		return false
-	}
-	if a.AggId != b.AggId {
 		return false
 	}
 	if a.Archive != b.Archive {

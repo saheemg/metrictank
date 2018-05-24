@@ -81,8 +81,7 @@ func (q *querier) Select(matchers ...*labels.Matcher) (storage.SeriesSet, error)
 				consReq := consolidation.None
 				fn := mdata.Aggregations.Get(archive.AggId).AggregationMethod[0]
 				cons := consolidation.Consolidator(fn)
-
-				newReq := models.NewReq(archive.Id, archive.NameWithTags(), target, q.from, q.to, math.MaxUint32, uint32(archive.Interval), cons, consReq, s.Node, archive.SchemaId, archive.AggId)
+				newReq := models.NewReq(archive.Id, archive.NameWithTags(), target, q.from, q.to, math.MaxUint32, uint32(archive.Interval), cons, consReq, s.Node, archive.SchemaId)
 				reqs = append(reqs, newReq)
 			}
 		}
