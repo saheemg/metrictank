@@ -22,6 +22,9 @@ type Node struct {
 	Leaf        bool
 	Defs        []Archive
 	HasChildren bool
+
+	// ids referencing extrinsic tag meta records
+	ExtTags map[uint32]struct{}
 }
 
 type Archive struct {
